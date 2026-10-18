@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RIIZE Blind Box Gacha · MetaMask</title>
+<style>
+  :root{
+    --bg:#0b0d17;
+    --card:#151a2e;
+    --card2:#1d2340;
+    --line:rgba(255,255,255,.08);
+    --txt:#eef1ff;
+    --muted:#9aa3c7;
+    --pink:#ff5fa2;
+    --purple:#8b5cf6;
+    --blue:#38bdf8;
+    --gold:#ffd166;
+    --ok:#22c55e;
+    --err:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans Thai',sans-serif;
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(139,92,246,.25), transparent 60%),
+      radial-gradient(800px 500px at 110% 10%, rgba(255,95,162,.22), transparent 60%),
+      var(--bg);
+    color:var(--txt);
+    min-height:100vh;
+    padding:24px 16px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+
+  /* HEADER */
+  header{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:16px;flex-wrap:wrap;margin-bottom:28px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:46px;height:46px;border-radius:14px;
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    display:grid;place-items:center;font-weight:800;font-size:18px;
+    box-shadow:0 10px 30px rgba(255,95,162,.35);
+  }
+  .brand h1{font-size:20px;letter-spacing:.5px}
+  .brand p{font-size:12px;color:var(--muted)}
+
+  .wallet-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .chip{
+    background:var(--card);border:1px solid var(--line);
+    padding:8px 12px;border-radius:999px;font-size:12px;color:var(--muted);
+    white-space:nowrap;
+  }
+  .chip b{color:var(--txt)}
+  .chip.warn{border-color:rgba(239,68,68,.5);color:#fca5a5}
+  .chip.warn b{color:#fca5a5}
+
+  button{font-family:inherit;cursor:pointer;border:none;transition:.2s}
+  button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+  .btn{
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;font-size:14px;
+    box-shadow:0 8px 24px rgba(139,92,246,.35);
+  }
+  .btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn-ghost{
+    background:transparent;border:1px solid var(--line);color:var(--txt);
+    padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;
+  }
+  .btn-ghost:hover:not(:disabled){border-color:var(--pink)}
+
+  /* HERO */
+  .hero{
+    background:linear-gradient(160deg,var(--card),var(--card2));
+    border:1px solid var(--line);border-radius:24px;
+    padding:28px;display:grid;grid-template-columns:1.1fr .9fr;gap:28px;
+    align-items:center;margin-bottom:26px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .hero h2{font-size:30px;line-height:1.25;margin-bottom:12px}
+  .hero h2 span{
+    background:linear-gradient(90deg,var(--pink),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p{color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:18px}
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tag{
+    font-size:11px;padding:5px 10px;border-radius:999px;
+    background:rgba(139,92,246,.16);color:#c4b5fd;border:1px solid rgba(139,92,246,.35);
+  }
+  .price-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .price{font-size:13px;color:var(--muted)}
+  .price b{color:var(--gold);font-size:18px}
+
+  /* BOX VISUAL */
+  .box-stage{display:grid;place-items:center;perspective:900px}
+  .box{
+    width:200px;height:200px;border-radius:28px;
+    background:linear-gradient(145deg,#ff5fa2,#8b5cf6 55%,#38bdf8);
+    display:grid;place-items:center;font-size:64px;
+    box-shadow:0 30px 70px rgba(139,92,246,.5), inset 0 0 40px rgba(255,255,255,.15);
+    animation:float 3.5s ease-in-out infinite;
+    position:relative;user-select:none;
+  }
+  .box::after{
+    content:'';position:absolute;inset:0;border-radius:28px;
+    background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.35),transparent 60%);
+    background-size:250% 100%;animation:shine 2.8s linear infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0) rotateY(-8deg)}50%{transform:translateY(-14px) rotateY(8deg)}}
+  @keyframes shine{0%{background-position:150% 0}100%{background-position:-50% 0}}
+  .box.shaking{animation:shake .5s ease-in-out infinite}
+  @keyframes shake{
+    0%,100%{transform:translateX(0) rotate(0)}
+    25%{transform:translateX(-10px) rotate(-6deg)}
+    75%{transform:translateX(10px) rotate(6deg)}
+  }
+
+  /* SECTION */
+  .section-title{
+    display:flex;justify-content:space-between;align-items:center;
+    margin:30px 0 14px;gap:10px;flex-wrap:wrap;
+  }
+  .section-title h3{font-size:17px}
+  .section-title span{font-size:12px;color:var(--muted)}
+
+  /* RESULT */
+  .result{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:22px;min-height:150px;display:grid;place-items:center;text-align:center;
+    margin-bottom:10px;transition:.3s;
+  }
+  .result .empty{color:var(--muted);font-size:14px}
+  .card-reveal{animation:pop .5s cubic-bezier(.2,1.4,.5,1)}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+  /* CARD GRID */
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;
+  }
+  .gacha-card{
+    background:linear-gradient(170deg,var(--card2),var(--card));
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    transition:.25s;position:relative;
+  }
+  .gacha-card:hover{transform:translateY(-6px);border-color:rgba(255,95,162,.5)}
+  .thumb{
+    height:150px;display:grid;place-items:center;font-size:52px;
+    background:linear-gradient(135deg,rgba(255,95,162,.25),rgba(139,92,246,.25));
+    position:relative;
+  }
+  .rarity{
+    position:absolute;top:10px;left:10px;font-size:10px;font-weight:800;
+    padding:4px 9px;border-radius:999px;letter-spacing:.5px;
+  }
+  .r-common{background:rgba(154,163,199,.25);color:#cbd2ef}
+  .r-rare{background:rgba(56,189,248,.22);color:#7dd3fc}
+  .r-epic{background:rgba(139,92,246,.25);color:#c4b5fd}
+  .r-legend{background:rgba(255,209,102,.22);color:var(--gold)}
+  .gacha-card .meta{padding:12px 14px}
+  .gacha-card .meta h4{font-size:14px;margin-bottom:4px}
+  .gacha-card .meta p{font-size:11px;color:var(--muted)}
+  .gacha-card.locked .thumb{filter:grayscale(1) brightness(.5)}
+  .gacha-card.locked .meta h4{color:var(--muted)}
+
+  /* HISTORY */
+  .history{display:flex;flex-direction:column;gap:8px}
+  .h-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--line);
+    padding:10px 14px;border-radius:12px;font-size:12px;
+  }
+  .h-item .name{font-weight:700}
+  .h-item .time{color:var(--muted);font-size:11px;white-space:nowrap}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+    background:#1f2542;border:1px solid var(--line);color:var(--txt);
+    padding:12px 20px;border-radius:12px;font-size:13px;z-index:99;
+    transition:.35s;box-shadow:0 12px 40px rgba(0,0,0,.5);
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--err)}
+  .toast.ok{border-color:var(--ok)}
+
+  .status{font-size:12px;color:var(--muted);margin-top:10px}
+  .status.ok{color:#86efac}
+  .status.err{color:#fca5a5}
+
+  @media(max-width:760px){
+    .hero{grid-template-columns:1fr;text-align:center}
+    .hero .tags,.price-row{justify-content:center}
+    .box{width:160px;height:160px;font-size:52px}
+    .hero h2{font-size:24px}
+    header{justify-content:center;text-align:center}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">R</div>
+      <div>
+        <h1>RIIZE Blind Box Gacha</h1>
+        <p>สุ่มการ์ดศิลปิน · เฉพาะผู้ถือ MetaMask</p>
+      </div>
+    </div>
+    <div class="wallet-box">
+      <div class="chip" id="netChip">Network: <b>—</b></div>
+      <div class="chip" id="balChip">Balance: <b>—</b></div>
+      <button class="btn" id="connectBtn" type="button">เชื่อม MetaMask</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h2>เปิดกล่องสุ่ม <span>RIIZE</span><br/>ลุ้นการ์ดแรร์ถึง Legendary</h2>
+      <p>
+        ต้องเชื่อมต่อ MetaMask ก่อนจึงจะสุ่มได้ ระบบจะหักค่าสุ่มจากกระเป๋าของคุณ
+        แล้วสุ่มการ์ดตามเปอร์เซ็นต์ที่กำหนดไว้ (ระบบนี้ใช้ BNB Smart Chain Testnet สำหรับการทดสอบ)
+      </p>
+      <div class="tags">
+        <span class="tag">🎴 12 การ์ดสะสม</span>
+        <span class="tag">💎 4 ระดับ rarity</span>
+        <span class="tag">🔐 MetaMask only</span>
+      </div>
+      <div class="price-row">
+        <span class="price">ค่าสุ่มต่อครั้ง <b id="priceLabel">—</b></span>
+        <button class="btn" id="gachaBtn" type="button" disabled>สุ่มการ์ด</button>
+        <button class="btn-ghost" id="resetBtn" type="button">รีเซ็ตสะสม</button>
+      </div>
+      <p class="status" id="status">สถานะ: ยังไม่เชื่อมกระเป๋า</p>
+    </div>
+
+    <div class="box-stage">
+      <div class="box" id="boxVisual">🎁</div>
+    </div>
+  </div>
+
+  <div class="result" id="resultBox">
+    <div class="empty">ผลการสุ่มจะแสดงที่นี่ ✨</div>
+  </div>
+
+  <div class="section-title">
+    <h3>คอลเลกชัน RIIZE</h3>
+    <span id="collectedCount">สะสมได้ 0 / 12</span>
+  </div>
+  <div class="grid" id="cardGrid"></div>
+
+  <div class="section-title">
+    <h3>ประวัติการสุ่ม</h3>
+    <span id="historyCount">0 ครั้ง</span>
+  </div>
+  <div class="history" id="history"></div>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ✅ โหลด ethers.js ก่อนสคริปต์หลัก -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+
+<script>
+/* =========================================================
+   RIIZE Blind Box Gacha — MetaMask (Production-ready)
+   ========================================================= */
+
+/* ---------- ⚙️ CONFIG (แก้ตรงนี้) ---------- */
+const RECEIVER_ADDRESS = "0x65f55465396F4b4A5012f032e0F24E5e65937072"; // <-- ใส่ที่อยู่กระเป๋ารับเงิน
+const PRICE_BNB       = "0.001";        // ราคาสุ่มต่อครั้ง (tBNB)
+const REQUIRED_CHAIN   = "0x61";        // BNB Smart Chain Testnet (Chain ID 97)
+
+/* ---------- 🎴 การ์ด RIIZE ---------- */
+const CARDS = [
+  { id:1,  name:"Shotaro",      emoji:"🕺", image:"images/swagshotaro.jpg", rarity:"rare", weight:26 },
+{ id:2,  name:"Eunseok",      emoji:"😎", image:"images/lovenongpaew.jpg", rarity:"epic", weight:26 },
+{ id:3,  name:"Sungchan",     emoji:"🏀", image:"images/lovepeechamp.jpg", rarity:"epic", weight:26 },
+{ id:4,  name:"Wonbin",       emoji:"🎸", image:"images/taktongna.jpg", rarity:"rare", weight:12 },
+{ id:5,  name:"Seunghan",     emoji:"🎤", image:"images/sunghanseol.jpg", rarity:"rare", weight:12 },
+{ id:6,  name:"Sohee",        emoji:"🎧", image:"images/jimmylee.jpg", rarity:"rare", weight:12 },
+{ id:7,  name:"Anton",         emoji:"🎹", image:"images/rakternatar.jpg", rarity:"epic", weight:5 },
+{ id:8,  name:"RIIZE OT7",    emoji:"💫", image:"images/soheenaruto.jpg", rarity:"legend", weight:4 },
+{ id:9,  name:"Briize",       emoji:"💖", image:"images/mybrohan.jpg", rarity:"common", weight:4 },
+{ id:10, name:"RIIZING",      emoji:"🔥", image:"images/toniloveyou.jpg", rarity:"legend", weight:1.2 },
+{ id:11, name:"Get A Guitar", emoji:"🎶", image:"images/seokgamemer.jpg", rarity:"common", weight:1 },
+{ id:12, name:"RIIZE 👑",     emoji:"👑", image:"images/sungchanlhor.jpg", rarity:"legend", weight:0.8 }
+];
+
+const RARITY_LABEL = { common:"COMMON", rare:"RARE", epic:"EPIC", legend:"LEGENDARY" };
+const RARITY_CLASS = { common:"r-common", rare:"r-rare", epic:"r-epic", legend:"r-legend" };
+const CHAIN_NAMES  = { "0x61":"BNB Smart Chain Testnet", "0x38":"BNB Smart Chain", "0x1":"Ethereum Mainnet", "0xaa36a7":"Sepolia", "0x5":"Goerli", "0x89":"Polygon" };
+
+/* ---------- STATE ---------- */
+let provider = null;
+let signer   = null;
+let account  = null;
+let chainId  = null;
+let owned    = safeParse(localStorage.getItem("riize_owned"), {});
+let history  = safeParse(localStorage.getItem("riize_history"), []);
+let isBusy   = false;
+
+/* ---------- HELPERS ---------- */
+function $(id){ return document.getElementById(id); }
+function safeParse(str, fallback){
+  try{ return str ? JSON.parse(str) : fallback; }catch{ return fallback; }
+}
+function isAddressSet(){
+  return /^0x[a-fA-F0-9]{40}$/.test(RECEIVER_ADDRESS)
+      && RECEIVER_ADDRESS !== "0x0000000000000000000000000000000000000000";
+}
+function shortAddr(a){ return a ? a.slice(0,6)+"..."+a.slice(-4) : "—"; }
+
+/* ---------- TOAST ---------- */
+let toastTimer;
+function toast(msg, type=""){
+  const el = $("toast");
+  el.textContent = msg;
+  el.className = "toast show " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className = "toast " + type; }, 2800);
+}
+
+/* ---------- STATUS ---------- */
+function setStatus(msg, type=""){
+  const el = $("status");
+  el.textContent = "สถานะ: " + msg;
+  el.className = "status " + type;
+}
+
+/* ---------- RENDER GRID ---------- */
+function renderGrid(){
+  const grid = $("cardGrid");
+  grid.innerHTML = "";
+  CARDS.forEach(c=>{
+    const count    = owned[c.id] || 0;
+    const unlocked = count > 0;
+    const div = document.createElement("div");
+    div.className = "gacha-card" + (unlocked ? "" : " locked");
+    div.innerHTML = `
+      <div class="thumb">
+        <span class="rarity ${RARITY_CLASS[c.rarity]}">${RARITY_LABEL[c.rarity]}</span>
+        ${unlocked
+  ? `<img src="${c.image}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;">`
+  : "❔"}
+      </div>
+      <div class="meta">
+        <h4>${unlocked ? c.name : "???"}</h4>
+        <p>${unlocked ? "สะสม "+count+" ใบ" : "ยังไม่ปลดล็อก"}</p>
+      </div>`;
+    grid.appendChild(div);
+  });
+  $("collectedCount").textContent = `สะสมได้ ${Object.keys(owned).length} / ${CARDS.length}`;
+}
+
+/* ---------- RENDER HISTORY ---------- */
+function renderHistory(){
+  const box = $("history");
+  if(!history.length){
+    box.innerHTML = `<div class="h-item" style="justify-content:center;color:var(--muted)">ยังไม่มีประวัติ</div>`;
+    $("historyCount").textContent = "0 ครั้ง";
+    return;
+  }
+  box.innerHTML = history.slice(0,10).map(h=>`
+    <div class="h-item">
+      <span class="name">${h.emoji} ${h.name}</span>
+      <span class="time">${h.time}</span>
+    </div>`).join("");
+  $("historyCount").textContent = history.length + " ครั้ง";
+}
+
+/* ---------- NETWORK + BALANCE ---------- */
+async function refreshNetworkAndBalance(){
+  if(!window.ethereum) return;
+  try{
+    chainId = await window.ethereum.request({ method:"eth_chainId" });
+    const netName = CHAIN_NAMES[chainId] || chainId;
+    const netEl = $("netChip");
+    const okNet = chainId === REQUIRED_CHAIN;
+    netEl.className = "chip" + (okNet ? "" : " warn");
+    netEl.innerHTML = `Network: <b>${netName}</b>${okNet ? "" : " ⚠️"}`;
+
+    if(account && provider){
+      const bal = await provider.getBalance(account);
+      $("balChip").innerHTML = `Balance: <b>${parseFloat(ethers.formatEther(bal)).toFixed(4)} tBNB</b>`;
+    }else{
+      $("balChip").innerHTML = `Balance: <b>—</b>`;
+    }
+  }catch(e){ console.warn(e); }
+}
+
+/* ---------- CONNECT ---------- */
+async function connectWallet(){
+  if(!window.ethereum){
+    toast("ไม่พบ MetaMask กรุณาติดตั้งก่อน", "err");
+    setStatus("ไม่พบ MetaMask", "err");
+    return;
+  }
+  try{
+    const accounts = await window.ethereum.request({ method:"eth_requestAccounts" });
+    if(!accounts || !accounts.length) throw new Error("ไม่พบบัญชี");
+
+    account  = accounts[0];
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer   = await provider.getSigner();
+
+    $("connectBtn").textContent = shortAddr(account);
+    $("connectBtn").disabled = true;
+    await refreshNetworkAndBalance();
+    updateGachaAvailability();
+
+    if(!isAddressSet()){
+      setStatus("⚠️ ยังไม่ได้ตั้งค่า RECEIVER_ADDRESS", "err");
+      toast("โปรดตั้งค่า RECEIVER_ADDRESS ในโค้ดก่อน", "err");
+    }else{
+      setStatus("เชื่อมต่อแล้ว พร้อมสุ่ม!", "ok");
+      toast("เชื่อม MetaMask สำเร็จ", "ok");
+    }
+  }catch(e){
+    console.error(e);
+    toast("เชื่อมไม่สำเร็จ: " + (e.message || e), "err");
+    setStatus("เชื่อมไม่สำเร็จ", "err");
+  }
+}
+
+/* ---------- GACHA AVAILABILITY ---------- */
+function updateGachaAvailability(){
+  const ready = !!signer && isAddressSet() && chainId === REQUIRED_CHAIN && !isBusy;
+  $("gachaBtn").disabled = !ready;
+}
+
+/* ---------- PICK CARD ---------- */
+function pickCard(){
+  const total = CARDS.reduce((s,c)=> s + c.weight, 0);
+  let r = Math.random() * total;
+  for(const c of CARDS){
+    r -= c.weight;
+    if(r <= 0) return c;
+  }
+  return CARDS[0];
+}
+
+/* ---------- SWITCH NETWORK ---------- */
+async function ensureNetwork(){
+  if(chainId === REQUIRED_CHAIN) return true;
+  try{
+    await window.ethereum.request({
+      method:"wallet_switchEthereumChain",
+      params:[{ chainId: REQUIRED_CHAIN }]
+    });
+    chainId = REQUIRED_CHAIN;
+    await refreshNetworkAndBalance();
+    return true;
+  }catch(e){
+    toast("กรุณาสลับ network ใน MetaMask ก่อน", "err");
+    setStatus("Network ไม่ถูกต้อง", "err");
+    return false;
+  }
+}
+
+/* ---------- MAIN: PAY + GACHA ---------- */
+async function payAndGacha(){
+  if(isBusy) return;
+  if(!signer){ toast("กรุณาเชื่อม MetaMask ก่อน", "err"); return; }
+  if(!isAddressSet()){ toast("ยังไม่ได้ตั้งค่า RECEIVER_ADDRESS", "err"); return; }
+
+  isBusy = true;
+  updateGachaAvailability();
+  $("boxVisual").classList.add("shaking");
+  $("resultBox").innerHTML = `<div class="empty">กำลังสุ่ม... 🎲</div>`;
+
+  try{
+    /* 1) ตรวจ network */
+    const okNet = await ensureNetwork();
+    if(!okNet) throw new Error("Wrong network");
+
+    /* 2) ตรวจยอดเงิน */
+    const bal = await provider.getBalance(account);
+    const need = ethers.parseEther(PRICE_BNB);
+    if(bal < need){
+      throw new Error("ยอด tBNB ไม่พอสำหรับค่าสุ่ม");
+    }
+
+    /* 3) ส่งธุรกรรม */
+    setStatus("กำลังรออนุมัติใน MetaMask...");
+    const tx = await signer.sendTransaction({
+      to: RECEIVER_ADDRESS,
+      value: need
+    });
+    toast("ส่งธุรกรรมแล้ว กำลังรอยืนยัน...", "ok");
+    setStatus("กำลังรอการยืนยันบนเชน...");
+    await tx.wait();
+
+    /* 4) สุ่มการ์ด */
+    const card = pickCard();
+    owned[card.id] = (owned[card.id] || 0) + 1;
+    history.unshift({
+      name: card.name,
+      emoji: card.emoji,
+      time: new Date().toLocaleString("th-TH")
+    });
+    history = history.slice(0, 50);
+
+    localStorage.setItem("riize_owned",   JSON.stringify(owned));
+    localStorage.setItem("riize_history", JSON.stringify(history));
+
+    /* 5) แสดงผล */
+    $("resultBox").innerHTML = `
+      <div class="card-reveal">
+        <img src="${card.image}" alt="${card.name}"
+     style="width:180px;height:240px;object-fit:cover;border-radius:14px;margin-bottom:12px;">
+        <div style="font-size:20px;font-weight:800">${card.name}</div>
+        <div style="margin-top:8px">
+          <span class="rarity ${RARITY_CLASS[card.rarity]}" style="position:static;display:inline-block">
+            ${RARITY_LABEL[card.rarity]}
+          </span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          Tx: ${tx.hash.slice(0,10)}...${tx.hash.slice(-8)}
+        </div>
+      </div>`;
+    toast(`ได้การ์ด ${card.name}!`, "ok");
+    setStatus("สุ่มสำเร็จ ✨", "ok");
+
+    renderGrid();
+    renderHistory();
+    await refreshNetworkAndBalance();
+  }catch(e){
+    console.error(e);
+    const msg = e?.reason || e?.shortMessage || e?.message || String(e);
+    if(e?.code === 4001 || /user rejected/i.test(msg)){
+      toast("คุณยกเลิกธุรกรรม", "err");
+      setStatus("ยกเลิกธุรกรรม", "err");
+    }else{
+      toast("ผิดพลาด: " + msg, "err");
+      setStatus("เกิดข้อผิดพลาด", "err");
+    }
+    $("resultBox").innerHTML = `<div class="empty">สุ่มไม่สำเร็จ ลองใหม่อีกครั้ง</div>`;
+  }finally{
+    isBusy = false;
+    $("boxVisual").classList.remove("shaking");
+    updateGachaAvailability();
+  }
+}
+
+/* ---------- RESET ---------- */
+function resetCollection(){
+  if(!confirm("ต้องการรีเซ็ตคอลเลกชันและประวัติทั้งหมดหรือไม่?")) return;
+  owned = {};
+  history = [];
+  localStorage.removeItem("riize_owned");
+  localStorage.removeItem("riize_history");
+  renderGrid();
+  renderHistory();
+  $("resultBox").innerHTML = `<div class="empty">ผลการสุ่มจะแสดงที่นี่ ✨</div>`;
+  toast("รีเซ็ตแล้ว", "ok");
+}
+
+/* ---------- EVENTS ---------- */
+$("connectBtn").addEventListener("click", connectWallet);
+$("gachaBtn").addEventListener("click", payAndGacha);
+$("resetBtn").addEventListener("click", resetCollection);
+
+if(window.ethereum){
+  window.ethereum.on("accountsChanged", (acc)=>{
+    if(!acc || !acc.length){
+      account = null; signer = null;
+      $("connectBtn").disabled = false;
+      $("connectBtn").textContent = "เชื่อม MetaMask";
+      $("netChip").innerHTML = "Network: <b>—</b>";
+      $("balChip").innerHTML = "Balance: <b>—</b>";
+      setStatus("ยังไม่เชื่อมกระเป๋า");
+      updateGachaAvailability();
+    }else{
+      account = acc[0];
+      $("connectBtn").textContent = shortAddr(account);
+      refreshNetworkAndBalance().then(updateGachaAvailability);
+    }
+  });
+
+  window.ethereum.on("chainChanged", ()=>{
+    refreshNetworkAndBalance().then(()=>{
+      updateGachaAvailability();
+      if(chainId !== REQUIRED_CHAIN){
+        toast("Network ไม่ถูกต้อง กรุณาสลับไป " + (CHAIN_NAMES[REQUIRED_CHAIN]||REQUIRED_CHAIN), "err");
+      }
+    });
+  });
+}
+
+/* ---------- INIT ---------- */
+(function init(){
+  $("priceLabel").textContent = PRICE_BNB + " tBNB";
+  renderGrid();
+  renderHistory();
+  updateGachaAvailability();
+
+  if(!window.ethereum){
+    setStatus("ไม่พบ MetaMask — กรุณาติดตั้งก่อนใช้งาน", "err");
+  }else if(!isAddressSet()){
+    setStatus("⚠️ โปรดตั้งค่า RECEIVER_ADDRESS ในโค้ด", "err");
+  }
+})();
+</script>
+</body>
+</html>
